@@ -26,6 +26,62 @@ class NotesTableViewController: UITableViewController,UITextFieldDelegate,NSFile
         
     }
     
+    var presentedItemURL: NSURL? {
+        
+        let groupURL = NSFileManager.defaultManager().containerURLForSecurityApplicationGroupIdentifier("group.watchnotes")
+        let fileURL = groupURL?.URLByAppendingPathComponent("notes.bin")
+        
+        return fileURL!
+        
+    }
+    
+    var presentedItemOperationQueue: NSOperationQueue {
+        
+        return NSOperationQueue.mainQueue()
+    }
+    
+    private func populateNotes() {
+        
+        // get the notes array
+        fileCoordinator.coordinateReadingItemAtURL(presentedItemURL!, options: nil, error: nil) { (newURL :NSURL!) -> Void in
+            
+            let savedData = NSData(contentsOfURL: newURL)
+            
+            if savedData == nil {
+                self.notes = NSMutableArray()
+            }
+            else {
+                
+                self.notes = NSKeyedUnarchiver.unarchiveObjectWithData(savedData!) as NSMutableArray
+            }
+            
+        }
+    }
+    
+    private func saveNote(note :String) {
+        
+        // write note into the notes array
+        fileCoordinator.coordinateWritingItemAtURL(presentedItemURL!, options: nil, error: nil) { ( newURL :NSURL!) -> Void in
+            
+            self.notes.addObject(note)
+            
+            let saveData = NSKeyedArchiver.archivedDataWithRootObject(self.notes)
+            let success = saveData.writeToURL(newURL, atomically: true)
+        }
+        
+    }
+    
+    private func updateNotes() {
+        
+        // write note into the notes array
+        fileCoordinator.coordinateWritingItemAtURL(presentedItemURL!, options: nil, error: nil) { ( newURL :NSURL!) -> Void in
+            
+            let saveData = NSKeyedArchiver.archivedDataWithRootObject(self.notes)
+            let success = saveData.writeToURL(newURL, atomically: true)
+        }
+
+    }
+    
     private func deleteAllNotes() {
         
         fileCoordinator.coordinateWritingItemAtURL(presentedItemURL!, options: nil, error: nil) { ( newURL :NSURL!) -> Void in
@@ -52,21 +108,7 @@ class NotesTableViewController: UITableViewController,UITextFieldDelegate,NSFile
         return 1
     }
     
-    var presentedItemURL: NSURL? {
-        
-        let groupURL = NSFileManager.defaultManager().containerURLForSecurityApplicationGroupIdentifier("group.watchnotes")
-        let fileURL = groupURL?.URLByAppendingPathComponent("notes.bin")
-        
-        return fileURL!
-        
-    }
     
-    var presentedItemOperationQueue: NSOperationQueue {
-        
-        return NSOperationQueue.mainQueue()
-    }
-
-
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete method implementation.
         // Return the number of rows in the section.
@@ -105,40 +147,23 @@ class NotesTableViewController: UITableViewController,UITextFieldDelegate,NSFile
         cell.textLabel?.text = note
         
         return cell
-        
     }
     
-    private func populateNotes() {
-        
-        // get the notes array
-        fileCoordinator.coordinateReadingItemAtURL(presentedItemURL!, options: nil, error: nil) { (newURL :NSURL!) -> Void in
-            
-            let savedData = NSData(contentsOfURL: newURL)
-            
-            if savedData == nil {
-                self.notes = NSMutableArray()
-            }
-            else {
-                
-                self.notes = NSKeyedUnarchiver.unarchiveObjectWithData(savedData!) as NSMutableArray
-            }
-            
-        }
+    override func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        return true;
     }
     
-    private func saveNote(note :String) {
-        
-        // write note into the notes array
-        fileCoordinator.coordinateWritingItemAtURL(presentedItemURL!, options: nil, error: nil) { ( newURL :NSURL!) -> Void in
+    override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
+    
+        if editingStyle == UITableViewCellEditingStyle.Delete {
+
+            self.notes.removeObjectAtIndex(indexPath.row)
+            updateNotes()
+            self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Automatic)
             
-            self.notes.addObject(note)
-            
-            let saveData = NSKeyedArchiver.archivedDataWithRootObject(self.notes)
-            let success = saveData.writeToURL(newURL, atomically: true)
         }
         
     }
-    
     
     func textFieldDidEndEditing(textField: UITextField) {
     
