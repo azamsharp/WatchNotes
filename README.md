@@ -1,7 +1,7 @@
 WatchNotes
 ==========
 
-<img src="https://dl.dropboxusercontent.com/u/20116434/WatchNotesBanner.png">
+<img src="https://dl.dropboxusercontent.com/u/20116434/WatchNotes.gif">
 
 Watch Notes is an iPhone and Apple Watch application which allows the user to share the notes from iPhone to Apple Watch. The sharing is performed by using the App Groups which is accessed from the iPhone application and the Apple Watch Extensions. 
 
